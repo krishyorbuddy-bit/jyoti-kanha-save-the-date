@@ -175,48 +175,31 @@ function detectCalendarPlatform() {
 // Detect the device once when the invitation loads.
 const calendarPlatform = detectCalendarPlatform();
 
+// WEDDING_DIRECT_CALENDAR_V1 — no provider selection UI.
 tap.onclick = () => {
-  // Preserve the existing 13-second playback requirement.
   if (!unlocked) return;
 
-  if (calendarPlatform === "ios") {
-    // WEDDING_IOS_CALENDAR_CHOICE_V1
-    // Explain the file handling before the guest chooses.
-    const panel = modal.querySelector(".panel") || modal;
-    let hint = document.getElementById("ios-calendar-help");
-
-    if (!hint) {
-      hint = document.createElement("p");
-      hint.id = "ios-calendar-help";
-      hint.textContent =
-        "For Apple Calendar, tap the calendar-file option. " +
-        "If it downloads, open this invitation in Safari " +
-        "and try again. You can also choose Google Calendar.";
-      hint.style.cssText =
-        "font-size:13px;line-height:1.55;text-align:center;" +
-        "margin:14px 6px 4px;opacity:.85;";
-      panel.appendChild(hint);
-    }
-
-    modal.classList.add("active");
-    return;
-  }
+  const eventUrl = new URL("wedding.ics", document.baseURI);
 
   if (calendarPlatform === "android") {
-    // Google Calendar may open in the installed app
-    // or browser depending on Android link settings.
     const googleLink = document.querySelector(
       '.panel a[href*="calendar.google.com"]'
     );
-
-    if (googleLink) {
-      window.location.assign(googleLink.href);
-      return;
-    }
+    window.location.assign(googleLink ? googleLink.href : eventUrl.href);
+    return;
   }
 
-  // Desktop, unknown platform, or missing Google link.
-  modal.classList.add("active");
+  if (calendarPlatform === "ios") {
+    // iOS may offer a read-only calendar subscription confirmation,
+    // rather than importing a standalone event. iOS browser support varies.
+    const subscriptionUrl = new URL(eventUrl.href);
+    subscriptionUrl.protocol = "webcal:";
+    window.location.assign(subscriptionUrl.href);
+    return;
+  }
+
+  // Desktop or unrecognized device: standard calendar event file.
+  window.location.assign(eventUrl.href);
 };
 
 document.getElementById("close").onclick = () => {

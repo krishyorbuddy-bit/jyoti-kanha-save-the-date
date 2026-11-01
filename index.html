@@ -37,9 +37,37 @@ display:none;
 .panel button{background:none;border:0;padding:12px;color:#754352;cursor:pointer}
 .panel small{display:block;line-height:1.5}
 
+
+/* WEDDING_IMMERSIVE_FULLSCREEN_V1 */
+#invitationScreen{
+  position:fixed;inset:0;width:100%;height:100dvh;
+  display:grid;place-items:center;overflow:hidden;
+  background:#120e13;z-index:1;
+}
+#invitationScreen .stage{
+  width:min(100vw,56.25dvh,520px);
+  max-height:100dvh;
+  box-shadow:none;
+}
+#invitationScreen.playing .stage{width:min(100vw,56.25dvh)}
+#invitationScreen:fullscreen,
+#invitationScreen:-webkit-full-screen{
+  width:100%;height:100%;background:#120e13;
+}
+#invitationScreen:fullscreen .stage,
+#invitationScreen:-webkit-full-screen .stage{
+  width:min(100vw,56.25dvh);
+  max-height:100dvh;
+}
+#invitationScreen .modal{z-index:20}
+#invitationScreen .panel{max-height:calc(100dvh - 40px);overflow-y:auto}
+@supports not (height:100dvh){
+  #invitationScreen{height:100vh}
+}
 </style>
 </head>
 <body>
+<div id="invitationScreen">
 <main class="stage">
 <video id="movie" src="wedding.mp4" playsinline preload="metadata"></video>
 <section id="cover" class="cover">
@@ -61,6 +89,7 @@ display:none;
 <button id="close">Close</button>
 </div>
 </div>
+</div>
 <script>
 // WEDDING_13S_GATE_V1
 const video = document.getElementById("movie");
@@ -73,13 +102,27 @@ let watchedSeconds = 0;
 let lastTime = null;
 let unlocked = false;
 
-document.getElementById("open").onclick = async () => {
+// WEDDING_FULLSCREEN_CONTAINER_V1
+const invitationScreen = document.getElementById("invitationScreen");
+document.getElementById("open").onclick = () => {
+  // Request fullscreen synchronously while the user's tap is active.
+  // Some iPhone browsers refuse element fullscreen; viewport-filling
+  // layout remains the safe fallback without a native video player.
   try {
-    video.muted = false;
-    await video.play();
+    const request = invitationScreen.requestFullscreen ||
+                    invitationScreen.webkitRequestFullscreen;
+    if (request && !document.fullscreenElement) {
+      Promise.resolve(request.call(invitationScreen)).catch(() => {});
+    }
+  } catch (_) {}
+  invitationScreen.classList.add("playing");
+  video.muted = false;
+  const playing = video.play();
+  if (playing && playing.then) {
+    playing.then(() => cover.classList.add("hidden"))
+      .catch(() => alert("Please tap to start the invitation."));
+  } else {
     cover.classList.add("hidden");
-  } catch(e) {
-    alert("Please tap to start the invitation.");
   }
 };
 

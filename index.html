@@ -190,11 +190,9 @@ tap.onclick = () => {
   }
 
   if (calendarPlatform === "ios") {
-    // iOS may offer a read-only calendar subscription confirmation,
-    // rather than importing a standalone event. iOS browser support varies.
-    const subscriptionUrl = new URL(eventUrl.href);
-    subscriptionUrl.protocol = "webcal:";
-    window.location.assign(subscriptionUrl.href);
+    // Hand off the single wedding event as a standard .ics file.
+    // Some iOS browsers download it; the guest may need to open it.
+    window.location.assign(eventUrl.href);
     return;
   }
 

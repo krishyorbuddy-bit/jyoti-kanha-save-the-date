@@ -136,11 +136,25 @@ tap.onclick = () => {
   if (!unlocked) return;
 
   if (calendarPlatform === "ios") {
-    // iOS opens or downloads the event according to
-    // the browser's supported calendar-file handling.
-    window.location.assign(
-      new URL("wedding.ics", document.baseURI).href
-    );
+    // WEDDING_IOS_CALENDAR_CHOICE_V1
+    // Explain the file handling before the guest chooses.
+    const panel = modal.querySelector(".panel") || modal;
+    let hint = document.getElementById("ios-calendar-help");
+
+    if (!hint) {
+      hint = document.createElement("p");
+      hint.id = "ios-calendar-help";
+      hint.textContent =
+        "For Apple Calendar, tap the calendar-file option. " +
+        "If it downloads, open this invitation in Safari " +
+        "and try again. You can also choose Google Calendar.";
+      hint.style.cssText =
+        "font-size:13px;line-height:1.55;text-align:center;" +
+        "margin:14px 6px 4px;opacity:.85;";
+      panel.appendChild(hint);
+    }
+
+    modal.classList.add("active");
     return;
   }
 

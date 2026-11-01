@@ -113,8 +113,51 @@ video.addEventListener("seeking", () => {
   lastTime = null;
 });
 
+// WEDDING_DEVICE_CALENDAR_V1
+function detectCalendarPlatform() {
+  const ua = navigator.userAgent || "";
+
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (navigator.platform === "MacIntel" &&
+     navigator.maxTouchPoints > 1);
+
+  if (isIOS) return "ios";
+  if (/Android/i.test(ua)) return "android";
+
+  return "other";
+}
+
+// Detect the device once when the invitation loads.
+const calendarPlatform = detectCalendarPlatform();
+
 tap.onclick = () => {
+  // Preserve the existing 13-second playback requirement.
   if (!unlocked) return;
+
+  if (calendarPlatform === "ios") {
+    // iOS opens or downloads the event according to
+    // the browser's supported calendar-file handling.
+    window.location.assign(
+      new URL("wedding.ics", document.baseURI).href
+    );
+    return;
+  }
+
+  if (calendarPlatform === "android") {
+    // Google Calendar may open in the installed app
+    // or browser depending on Android link settings.
+    const googleLink = document.querySelector(
+      '.panel a[href*="calendar.google.com"]'
+    );
+
+    if (googleLink) {
+      window.location.assign(googleLink.href);
+      return;
+    }
+  }
+
+  // Desktop, unknown platform, or missing Google link.
   modal.classList.add("active");
 };
 
